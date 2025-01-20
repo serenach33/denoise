@@ -197,3 +197,4 @@ tune_result/
 **/**/*.pth
 **/**/**/*.pth
 **/ast_pretrained/
+**/**/ast_pretrained/
