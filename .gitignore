@@ -193,3 +193,7 @@ inference/
 **/old*
 **/panns/
 tune_result/
+**/*.pth
+**/**/*.pth
+**/**/**/*.pth
+**/ast_pretrained/
