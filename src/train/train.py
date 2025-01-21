@@ -11,8 +11,6 @@ def train(args, logger):
     method = get_method(args, dataset.target_dir, model)
 
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
-
-    # if "bianry" in args.mode:
     early_stopping = EarlyStopping(monitor='val/loss', patience=15, mode='min')
     ckpt_loss_callback = ModelCheckpoint(dirpath=args.save_dir, 
                                 monitor="val/loss", 
@@ -30,15 +28,6 @@ def train(args, logger):
                                 )
 
     callbacks = [lr_monitor, ckpt_loss_callback, ckpt_score_callback, early_stopping]
-    # else:
-    #     early_stopping = EarlyStopping(monitor='val_MulticlassAccuracy', patience=10, mode='max')
-    #     ckpt_callback = ModelCheckpoint(dirpath=args.save_dir, 
-    #                                 monitor="val_MulticlassAccuracy", 
-    #                                 mode='max', 
-    #                                 filename='best_{epoch:.2f}', 
-    #                                 save_top_k=1, 
-    #                                 save_last=True,
-    #                                 )
         
     if not args.test and not args.predict:
         trainer = Trainer(max_epochs=args.epoch, 
