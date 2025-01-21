@@ -7,12 +7,11 @@ TARFILES=("PhysioNet2022_v1.tar")
 EPOCHS=(200)
 NMELS=(64)
 BATCHES=(8)
-BACKBONES=("resnet38" "ast")
+BACKBONES=("ast")
 DURATIONS=(3 5 8)
 TRANSFORM_TYPES=("mel" "fbank")
 SAMPLERATES=(8000 16000)
 LRS=(0.0001 5e-05)
-DROPOUTS=(true false)
 IMGNET=(true false)
 AUDIOSET=(true false)
 
@@ -40,11 +39,6 @@ for SEED in "${SEEDS[@]}"; do
                                                         fi
                                                         if [ "$MODE" = "all" ]; then
                                                             num_classes=6
-                                                        fi
-
-                                                        dropout=""
-                                                        if [ "$DROPOUTS" = true ]; then
-                                                            dropout="--dropout"
                                                         fi
 
                                                         imagenet=""

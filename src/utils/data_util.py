@@ -94,6 +94,9 @@ class Get_MelSpec(pl.LightningModule):
         out = self.melspec(x)
         out = self.amplitude_to_db(out)
 
+        mean, std =  -4.2677393, 4.5689974
+        out = (out - mean) / (std * 2)
+
         return out
 
 class Get_Fbank(pl.LightningModule):
