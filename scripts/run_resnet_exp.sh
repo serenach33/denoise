@@ -7,14 +7,12 @@ TARFILES=("PhysioNet2022_v1.tar")
 EPOCHS=(200)
 NMELS=(64)
 BATCHES=(8)
-BACKBONES=("resnet38" "ast")
+BACKBONES=("resnet38")
 DURATIONS=(3 5 8)
 TRANSFORM_TYPES=("mel" "fbank")
 SAMPLERATES=(8000 16000)
 LRS=(0.0001 5e-05)
 DROPOUTS=(true false)
-IMGNET=(true false)
-AUDIOSET=(true false)
 
 # Iterate through each tarfile
 for SEED in "${SEEDS[@]}"; do
@@ -47,16 +45,6 @@ for SEED in "${SEEDS[@]}"; do
                                                             dropout="--dropout"
                                                         fi
 
-                                                        imagenet=""
-                                                        if [ "$IMGNET" = true ]; then
-                                                            imagenet="--imagenet_pretrain"
-                                                        fi
-                                                        
-                                                        audioset=""
-                                                        if [ "$AUDIOSET" = true ]; then
-                                                            audioset="--audioset_pretrain"
-                                                        fi
-
                                                         #CUDA_VISIBLE_DEVICES=0 
                                                         python main.py --mode "${MODE}" \
                                                             --project_name $PROJECT_NAME \
@@ -75,8 +63,6 @@ for SEED in "${SEEDS[@]}"; do
                                                             --use_h5 \
                                                             --num_classes $num_classes \
                                                             $dropout \
-                                                            $imagenet \
-                                                            $audioset \
                                                             
                                                     done
                                                 done
