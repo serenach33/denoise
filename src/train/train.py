@@ -36,7 +36,8 @@ def train(args, logger):
                         callbacks=callbacks,
                         logger=logger,
                         devices=args.gpus,
-                        strategy=DDPStrategy(find_unused_parameters=True)
+                        strategy=DDPStrategy(find_unused_parameters=True),
+                        gradient_clip_val=0.5
                         )     
     
     trainer.fit(method, datamodule=dataset)

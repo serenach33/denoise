@@ -13,6 +13,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from src.utils.data_util import Get_MelSpec, Get_Fbank, Normalization, Standardization
 
@@ -330,9 +331,17 @@ class BaseTrainer(pl.LightningModule):
             + list(self.classifier.parameters())
         )
         optimizer = optim.Adam(optim_params, lr=self.lr, weight_decay=self.wd)
+        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5)
         # for param_group in optimizer.param_groups:
         #     print(param_group['lr'])
-        return [optimizer]
+        # return [optimizer]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "monitor": "val/loss",
+            },
+        }
 
 def get_score(preds, targets):
 
