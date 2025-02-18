@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 from copy import deepcopy
 from src.models.resnet import ResNet38
 from src.models.ast_models import ASTModel
+from src.models.cnn6 import CNN6
 from src.models.method import CE
 
 def set_seed(seed):
@@ -19,6 +20,16 @@ def set_seed(seed):
 
 def get_model(args):
     kwargs = {}
+
+    if args.backbone == 'cnn6':
+    
+        kwargs['num_classes'] = args.num_classes
+        kwargs['do_dropout'] = args.dropout
+        kwargs['from_scratch'] = args.scratch
+        kwargs['path_to_weight'] = os.path.join(args.weights_path, 'Cnn6_mAP=0.343.pth')
+        kwargs['in_channel'] = args.in_channel
+
+        loaded_model = CNN6(**kwargs)
 
     if args.backbone == 'resnet38':
 
@@ -85,16 +96,29 @@ def get_method(args, wav_dir, model):
         width = num_frames
         height = args.nmels
 
-    kwargs['transform_dict'] = {
-        'samplerate' : args.samplerate,
-        'nfft' : args.nfft,
-        'nmels' : args.nmels,
-        'win_length' : args.win_length,
-        'hop_length' : args.hop_length,
-        'fmin' : args.fmin,
-        'fmax' : args.fmax,
-        'img_size' : (int(height * args.resize), int(width * args.resize))
-    }
+    if args.use_resize:
+        kwargs['transform_dict'] = {
+            'samplerate' : args.samplerate,
+            'nfft' : args.nfft,
+            'nmels' : args.nmels,
+            'win_length' : args.win_length,
+            'hop_length' : args.hop_length,
+            'fmin' : args.fmin,
+            'fmax' : args.fmax,
+            'img_size' : (224, 224)
+        }
+    else:
+        kwargs['transform_dict'] = {
+            'samplerate' : args.samplerate,
+            'nfft' : args.nfft,
+            'nmels' : args.nmels,
+            'win_length' : args.win_length,
+            'hop_length' : args.hop_length,
+            'fmin' : args.fmin,
+            'fmax' : args.fmax,
+            'img_size' : (int(height * args.resize), int(width * args.resize))
+        }
+
 
     # if args.method == 'ce':
     #     kwargs['criterion'] = [default_criterion]

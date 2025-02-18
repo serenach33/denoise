@@ -3,6 +3,7 @@ import tarfile
 import torchaudio
 import pandas as pd
 from torchaudio import transforms as T
+import torch.nn.functional as F
 import pytorch_lightning as pl
 import numpy as np
 import torch
@@ -98,13 +99,14 @@ class Get_MelSpec(pl.LightningModule):
         out = (out - mean) / (std * 2)
 
         return out
-
+    
 class Get_Fbank(pl.LightningModule):
     def __init__(self, transform_dict):
         super().__init__()
         self.samplerate = transform_dict['samplerate']
         self.nmels = transform_dict['nmels']
         self.img_size = transform_dict['img_size']
+        self.resizer = ResizeTensor(target_size=self.img_size)
     
     def forward(self, x):
         
@@ -121,12 +123,78 @@ class Get_Fbank(pl.LightningModule):
             
             mean, std =  -4.2677393, 4.5689974 #ast 논문 값
             fbank = (fbank - mean) / (std * 2) # mean / std
+            # Step 1: Rotate counterclockwise (90 degrees)
+            fbank = torch.rot90(fbank, k=1, dims=(0, 1))
+            
+            # fbank = fbank.T
+            fbank = self.resizer(fbank)
 
             fbanks.append(fbank)
         
         fbanked = torch.stack(fbanks).unsqueeze(dim=1)
 
         return fbanked
+    
+class ResizeTensor:
+    def __init__(self, target_size=(224, 224)):
+        self.target_height, self.target_width = target_size  # (224, 224)
+
+    def __call__(self, tensor):
+        original_height, original_width = tensor.shape  # (768, 64)
+
+        # Step 1: Split into chunks of height 224
+        chunks = []
+        for start in range(0, tensor.shape[1], self.target_width):
+            chunk = tensor[:, start:start + self.target_width]  # Take width slice
+
+            if chunk.shape[1] < self.target_width:
+                # Instead of padding, repeat the chunk until width = 224
+                repeat_factor = (self.target_width // chunk.shape[1]) + 1  # Calculate repetitions
+                chunk = chunk.repeat(1, repeat_factor)  # Repeat along width axis
+                chunk = chunk[:, :self.target_width]  # Trim to exactly 224 width
+
+            chunks.append(chunk.detach().cpu())
+
+        # Step 3: Stack chunks vertically
+        stacked_tensor = torch.cat(chunks, dim=0)  # Concatenating along height axis
+
+        # Step 4: Resize height to match 224 (if needed)
+        if stacked_tensor.shape[0] != self.target_height:
+            stacked_tensor = F.interpolate(
+                stacked_tensor.unsqueeze(0).unsqueeze(0),  # Add batch & channel dims
+                size=(self.target_height, self.target_width), mode='bilinear', align_corners=False
+            ).squeeze(0).squeeze(0)  # Remove batch & channel dims
+            stacked_tensor = stacked_tensor.to(dtype=torch.float16).to(device='cuda:0')
+        return stacked_tensor
+
+# class Get_Fbank(pl.LightningModule):
+#     def __init__(self, transform_dict):
+#         super().__init__()
+#         self.samplerate = transform_dict['samplerate']
+#         self.nmels = transform_dict['nmels']
+#         self.img_size = transform_dict['img_size']
+    
+#     def forward(self, x):
+        
+#         fbanks = []
+#         for i in range(len(x)):
+#             audio = x[i]
+#             fbank = torchaudio.compliance.kaldi.fbank(audio, htk_compat=True,
+#                                                 sample_frequency=self.samplerate,
+#                                                 use_energy=False,
+#                                                 window_type='hanning',
+#                                                 num_mel_bins=self.nmels,
+#                                                 dither=0.0,
+#                                                 frame_shift=10)
+            
+#             mean, std =  -4.2677393, 4.5689974 #ast 논문 값
+#             fbank = (fbank - mean) / (std * 2) # mean / std
+
+#             fbanks.append(fbank)
+        
+#         fbanked = torch.stack(fbanks).unsqueeze(dim=1)
+
+#         return fbanked
     
 class Normalization(torch.nn.Module):
     def __init__(self):

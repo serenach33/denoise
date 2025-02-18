@@ -82,6 +82,7 @@ parser.add_argument("--width", type=int, default=128)
 parser.add_argument("--resize", type=int, default=1)
 parser.add_argument("--use_normalization", action="store_true")
 parser.add_argument("--use_standardization", action="store_true")
+parser.add_argument("--use_resize", action="store_true")
 
 # for augmentation
 parser.add_argument("--augment_type", type=str, help='choose augmentation method', choices=['Arti', 'Spec', 'None'])

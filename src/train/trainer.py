@@ -331,7 +331,7 @@ class BaseTrainer(pl.LightningModule):
             + list(self.classifier.parameters())
         )
         optimizer = optim.Adam(optim_params, lr=self.lr, weight_decay=self.wd)
-        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5)
+        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.1)
         # for param_group in optimizer.param_groups:
         #     print(param_group['lr'])
         # return [optimizer]
